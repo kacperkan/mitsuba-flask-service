@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+
+<scene version="0.6.0">
+    <sensor type="perspective">
+        <transform name="toWorld">
+            <lookat origin="5, 5, 5" target="0, 0, 0" up="0, 0, 1" />
+        </transform>
+    </sensor>
+    <shape type="cube">
+        <bsdf type="diffuse">
+            <texture type="checkerboard" name="reflectance">
+                <float name="uvscale" value="6" />
+            </texture>
+        </bsdf>
+    </shape>
+</scene>
