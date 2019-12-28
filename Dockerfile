@@ -5,20 +5,6 @@ FROM ubuntu:16.04
 RUN apt-get update
 RUN apt-get install -y cmake vim git wget 
 
-RUN apt-get install -y build-essential \
-    scons \
-    libpng12-dev \
-    libjpeg-dev \
-    libilmbase-dev \
-    libxerces-c-dev \
-    libboost-all-dev \
-    libopenexr-dev \
-    libglewmx-dev \
-    libxxf86vm-dev \
-    libeigen3-dev \
-    libfftw3-dev 
-
-
 RUN apt-get install -y \
     build-essential \
     scons \
@@ -37,7 +23,6 @@ RUN apt-get install -y \
     libpcrecpp0v5 \
     libeigen3-dev \
     libfftw3-dev \
-    wget \
     libcollada-dom2.4-dp0 \ 
     libcollada-dom2.4-dp-dev \ 
     && apt-get clean \
