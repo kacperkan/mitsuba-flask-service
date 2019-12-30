@@ -28,6 +28,7 @@ def encode_image(path_to_xml: str) -> bytes:
         [
             "mtsutil",
             "tonemap",
+            "-a",
             "-f",
             "png",
             "-o",
@@ -36,7 +37,7 @@ def encode_image(path_to_xml: str) -> bytes:
         ]
     )
     print("Return code: {}".format(return_code))
-    an_img = cv2.imread(MAPPED_TEMP_IMAGE, cv2.IMREAD_COLOR)[..., ::-1]
+    an_img = cv2.imread(MAPPED_TEMP_IMAGE, cv2.IMREAD_UNCHANGED)[..., ::-1]
 
     # necessary to remove mitsuba watermark
     an_img = an_img[9:-12, 10:-7]
