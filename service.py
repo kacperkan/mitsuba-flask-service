@@ -41,7 +41,6 @@ def encode_image(path_to_xml: str) -> bytes:
 
     # necessary to remove mitsuba watermark
     an_img = an_img[9:-12, 10:-7]
-    os.remove(TEMP_IMAGE)
     os.remove(MAPPED_TEMP_IMAGE)
 
     encoded = cv2.imencode(".png", an_img)[1].squeeze().tolist()
