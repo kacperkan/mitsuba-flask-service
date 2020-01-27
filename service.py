@@ -1,15 +1,11 @@
 import os
 import shutil
 import subprocess
-import tempfile
 import warnings
-import zipfile
-import base64
 from pathlib import Path
 
 import cv2
-import flask
-from flask import Flask, make_response, request, jsonify
+from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
 
@@ -23,20 +19,23 @@ def encode_image(path_to_xml: str) -> bytes:
     return_code = subprocess.call(["mitsuba", "-o", TEMP_IMAGE, path_to_xml])
     print("Return code: {}".format(return_code))
 
-    print("Tone mapping ...")
-    return_code = subprocess.call(
-        [
-            "mtsutil",
-            "tonemap",
-            "-a",
-            "-f",
-            "png",
-            "-o",
-            MAPPED_TEMP_IMAGE,
-            TEMP_IMAGE,
-        ]
-    )
-    print("Return code: {}".format(return_code))
+    # some flags of rendering causes that png is produced directly
+    if os.path.exists(TEMP_IMAGE):
+        print("Tone mapping ...")
+        return_code = subprocess.call(
+            [
+                "mtsutil",
+                "tonemap",
+                "-a",
+                "-f",
+                "png",
+                "-o",
+                MAPPED_TEMP_IMAGE,
+                TEMP_IMAGE,
+            ]
+        )
+        print("Return code: {}".format(return_code))
+        os.remove(TEMP_IMAGE)
     an_img = cv2.imread(MAPPED_TEMP_IMAGE, cv2.IMREAD_UNCHANGED)[..., ::-1]
 
     # necessary to remove mitsuba watermark
