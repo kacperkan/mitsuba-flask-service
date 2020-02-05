@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 # mitsuba part
 
-RUN apt-get update
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y cmake vim git wget 
 
 RUN apt-get install -y \
@@ -24,7 +24,8 @@ RUN apt-get install -y \
     libeigen3-dev \
     libfftw3-dev \
     libcollada-dom2.4-dp0 \ 
-    libcollada-dom2.4-dp-dev \ 
+    libcollada-dom2.4-dp-dev \
+    zlib1g-dev \
     && apt-get clean \
     && apt-get autoclean \
     && apt-get autoremove
