@@ -37,7 +37,7 @@ Usage examples are provided in `test.py`. It uses pip dependencies from `require
 
 ## Acknowledgements
 
-My fork is influence by: [amyspark](https://github.com/amyspark/mitsuba/) 
+My fork is influenced by: [amyspark](https://github.com/amyspark/mitsuba/) 
 I used their fixes to run v0.6 of the mitsuba 
 
 The Dockerfile is influenced by: [ninjaben](https://hub.docker.com/r/ninjaben/mitsuba-rgb/dockerfile) 
