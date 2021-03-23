@@ -1,31 +1,32 @@
-FROM ubuntu:16.04
+FROM nvidia/cuda:11.2.2-devel-ubuntu20.04
 
 # mitsuba part
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y cmake vim git wget 
 
 RUN apt-get install -y \
     build-essential \
-    scons \
     git \
     qt5-default \
-    libqt5opengl5-dev \
-    libqt5xmlpatterns5-dev \
-    libpng12-dev \
+    libpng-dev \
     libjpeg-dev \
-    libilmbase-dev \
-    libxerces-c-dev \
-    libboost-all-dev \
-    libopenexr-dev \
-    libglewmx-dev \
-    libxxf86vm-dev \
-    libpcrecpp0v5 \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxcursor-dev \
     libeigen3-dev \
-    libfftw3-dev \
-    libcollada-dom2.4-dp0 \ 
-    libcollada-dom2.4-dp-dev \
     zlib1g-dev \
+    clang-9 \
+    libc++-9-dev \
+    libc++abi-9-dev \
+    ninja-build \
+    python3-dev \
+    python3-distutils \
+    python3-setuptools \
+    python3-pytest \
+    python3-pytest-xdist \
+    python3-numpy \
     && apt-get clean \
     && apt-get autoclean \
     && apt-get autoremove
@@ -43,30 +44,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
     && apt-get autoclean \
     && apt-get autoremove
 
-
-WORKDIR /mitsuba
-
-RUN git clone https://github.com/kacperkan/mitsuba
-RUN cd mitsuba && cp build/config-linux-gcc.py config.py \
-    && scons -j`nproc`
-
-ENV MITSUBA_PYVER=3.6
-
-RUN apt-get clean \
-    && apt-get autoclean \
-    && apt-get autoremove
-
-RUN mkdir renders
-VOLUME [ "/mitsuba/renders" ]
-
-COPY xorg.conf /etc/X11/xorg.conf
-ENV DISPLAY :0
-
-### wrapper to start headless xserver when using mtsimport
-COPY mtsimport-headless.sh /mitsuba/mitsuba/wrapper/mtsimport
-
-# miniconda part
-
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
@@ -74,7 +51,7 @@ RUN apt-get update --fix-missing && \
     apt-get install -y wget bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion && \
     apt-get clean
 
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.7.12-Linux-x86_64.sh -O ~/miniconda.sh && \
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda clean -tipsy && \
@@ -89,10 +66,34 @@ RUN conda install python=3.7.3 flask
 RUN conda install -c conda-forge opencv
 RUN pip install gunicorn
 
+WORKDIR /mitsuba2
+
+ENV CC=clang-9
+ENV CXX=clang++-9
+ENV CUDACXX=/usr/local/cuda/bin/nvcc
+ENV PYTHONPATH=/opt/conda/bin:$PYTHONPATH
+
+RUN git clone --recursive https://github.com/mitsuba-renderer/mitsuba2
+RUN cd mitsuba2 \
+    && mkdir build \
+    && cd build \
+    && cmake -GNinja -DPYTHON_EXECUTABLE=/opt/conda/bin/python .. \
+    && ninja -j8
+
+RUN mkdir renders
+VOLUME [ "/mitsuba2/renders" ]
+
+COPY xorg.conf /etc/X11/xorg.conf
+ENV DISPLAY :0
+
+### wrapper to start headless xserver when using mtsimport
+# miniconda part
+
+
 RUN apt-get install -y zip
 
 COPY service.py .
 EXPOSE 8000
 
-CMD /bin/bash -c "source /mitsuba/mitsuba/setpath.sh && gunicorn -w 4 -b 0.0.0.0:8000 --timeout 3600 service:app"
+CMD /bin/bash -c "source /mitsuba2/mitsuba2/setpath.sh && gunicorn -w 4 -b 0.0.0.0:8000 --timeout 3600 service:app"
 

@@ -16,7 +16,7 @@ def decode_image(byte_data: t.List[float]) -> np.ndarray:
 def render_zip():
     with open("examples/scene.zip", "rb") as f:
         result = requests.post(
-            "http://localhost:8000/render_zip", files={"zip": f}
+            "http://localhost:8001/render_zip", files={"zip": f}
         )
     data = json.loads(result.content)
     an_img = decode_image(data)
@@ -28,8 +28,9 @@ def render_zip():
 
 def render_clear_xml():
     with open("examples/hello.xml") as f:
-        result = requests.post("http://localhost:8000/render", data=f.read())
-    data = json.loads(result.content)
+        result = requests.post("http://localhost:8001/render", data=f.read())
+    print(result.content)
+    data = json.loads(result.raw)
     an_img = decode_image(data)
 
     plt.figure()
@@ -38,5 +39,5 @@ def render_clear_xml():
 
 
 if __name__ == "__main__":
-    render_clear_xml()
     render_zip()
+    render_clear_xml()

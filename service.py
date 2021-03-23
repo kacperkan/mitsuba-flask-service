@@ -1,11 +1,20 @@
+import mitsuba
+
+mitsuba.set_variant("scalar_rgb")
+
+import logging
 import os
 import shutil
 import subprocess
+import sys
 import warnings
 from pathlib import Path
 
 import cv2
+import numpy as np
 from flask import Flask, jsonify, make_response, request
+from mitsuba.core import Bitmap, Struct
+from mitsuba.core.xml import load_string
 
 app = Flask(__name__)
 
@@ -14,31 +23,21 @@ MAPPED_TEMP_IMAGE = "/tmp/temp.png"
 TEMP_SCENE = "/tmp/scene.xml"
 
 
-def encode_image(path_to_xml: str) -> bytes:
+def encode_image(xml_data: str) -> bytes:
     print("Rendering ...")
-    return_code = subprocess.call(["mitsuba", "-o", TEMP_IMAGE, path_to_xml])
-    print("Return code: {}".format(return_code))
+    print(xml_data)
+    scene = load_string(xml_data)
+    import pdb
 
-    # some flags of rendering causes that png is produced directly
-    if os.path.exists(TEMP_IMAGE):
-        print("Tone mapping ...")
-        return_code = subprocess.call(
-            [
-                "mtsutil",
-                "tonemap",
-                "-a",
-                "-f",
-                "png",
-                "-o",
-                MAPPED_TEMP_IMAGE,
-                TEMP_IMAGE,
-            ]
-        )
-        print("Return code: {}".format(return_code))
-        os.remove(TEMP_IMAGE)
-    an_img = cv2.imread(MAPPED_TEMP_IMAGE, cv2.IMREAD_UNCHANGED)[..., ::-1]
+    pdb.set_trace()
+    sensor = scene.sensors()[0]
+    scene.integrator().render(scene, sensor)
 
-    os.remove(MAPPED_TEMP_IMAGE)
+    film = sensor.film()
+    an_img = film.bitmap(raw=True).convert(
+        Bitmap.PixelFormat.RGB, Struct.Type.UInt8, srgb_gamma=False
+    )
+    an_img = np.array(an_img)
 
     encoded = cv2.imencode(".png", an_img)[1].squeeze().tolist()
     return encoded
@@ -49,10 +48,7 @@ def render():
     xml_data = request.data
     xml_data = xml_data.decode()
     try:
-        with open(TEMP_SCENE, "w") as f:
-            f.write(xml_data)
-        encoded = encode_image(TEMP_SCENE)
-
+        encoded = encode_image(xml_data)
         return jsonify(encoded)
     except Exception as e:
         print(e)
@@ -84,6 +80,7 @@ def render_zip():
             )
 
         xml_file = xml_files[0]
+        print("ok")
 
         encoded = encode_image(xml_file)
         shutil.rmtree(unpack_directory)
