@@ -1,11 +1,17 @@
 <?xml version="1.0" ?>
 
 <scene version="2.2.1">
+    <integrator type="path">
+        <integer name="max_depth" value="8"/>
+    </integrator>
     <sensor type="perspective">
         <transform name="to_world">
             <lookat origin="5, 5, 5" target="0, 0, 0" up="0, 0, 1" />
         </transform>
     </sensor>
+    <film type="hdrfilm">
+        <boolean name="banner" value="false"/>
+    </film>
     <shape type="sphere">
         <bsdf type="diffuse">
             <texture type="checkerboard" name="reflectance">

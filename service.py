@@ -2,19 +2,18 @@ import mitsuba
 
 mitsuba.set_variant("scalar_rgb")
 
-import logging
 import os
 import shutil
 import subprocess
-import sys
 import warnings
 from pathlib import Path
+from typing import List
 
 import cv2
 import numpy as np
 from flask import Flask, jsonify, make_response, request
-from mitsuba.core import Bitmap, Struct
-from mitsuba.core.xml import load_string
+from mitsuba.core import Bitmap, Struct, Thread
+from mitsuba.core.xml import load_file, load_string
 
 app = Flask(__name__)
 
@@ -23,13 +22,7 @@ MAPPED_TEMP_IMAGE = "/tmp/temp.png"
 TEMP_SCENE = "/tmp/scene.xml"
 
 
-def encode_image(xml_data: str) -> bytes:
-    print("Rendering ...")
-    print(xml_data)
-    scene = load_string(xml_data)
-    import pdb
-
-    pdb.set_trace()
+def _encode_img(scene) -> List[bytes]:
     sensor = scene.sensors()[0]
     scene.integrator().render(scene, sensor)
 
@@ -43,12 +36,26 @@ def encode_image(xml_data: str) -> bytes:
     return encoded
 
 
+def encode_image_from_str(xml_data: str) -> List[bytes]:
+    print("Rendering ...")
+    scene = load_string(xml_data)
+    return _encode_img(scene)
+
+
+def encode_image_from_file(xml_file: str) -> List[bytes]:
+    print("Rendering ...")
+
+    Thread.thread().file_resolver().append(os.path.dirname(xml_file))
+    scene = load_file(xml_file)
+    return _encode_img(scene)
+
+
 @app.route("/render", methods=["GET", "POST"])
 def render():
     xml_data = request.data
     xml_data = xml_data.decode()
     try:
-        encoded = encode_image(xml_data)
+        encoded = encode_image_from_str(xml_data)
         return jsonify(encoded)
     except Exception as e:
         print(e)
@@ -80,9 +87,7 @@ def render_zip():
             )
 
         xml_file = xml_files[0]
-        print("ok")
-
-        encoded = encode_image(xml_file)
+        encoded = encode_image_from_file(xml_file.as_posix())
         shutil.rmtree(unpack_directory)
         os.remove(temporary_file_name)
 

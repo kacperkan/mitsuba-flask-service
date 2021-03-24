@@ -29,8 +29,7 @@ def render_zip():
 def render_clear_xml():
     with open("examples/hello.xml") as f:
         result = requests.post("http://localhost:8001/render", data=f.read())
-    print(result.content)
-    data = json.loads(result.raw)
+    data = json.loads(result.content)
     an_img = decode_image(data)
 
     plt.figure()
@@ -39,5 +38,5 @@ def render_clear_xml():
 
 
 if __name__ == "__main__":
-    render_zip()
     render_clear_xml()
+    # render_zip()
